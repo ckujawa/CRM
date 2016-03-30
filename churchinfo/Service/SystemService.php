@@ -56,7 +56,8 @@ class SystemService
       $this->playbackSQLtoDatabase($file['tmp_name']);
     }
     exec("rm -rf $restoreResult->backupRoot");
-    $this->rebuildMenus();
+    $this->rebuildWithSQL("/mysql/upgrade/rebuild_nav_menus.sql");
+    $this->rebuildWithSQL("/mysql/upgrade/update_config.sql");
     $restoreResult->UpgradeStatus = $this->checkDatabaseVersion();
     return $restoreResult;
 
@@ -224,10 +225,10 @@ class SystemService
 
   }
 
-  function rebuildMenus()
+  function rebuildWithSQL($SQLFile)
   {
     $root = dirname(dirname(__FILE__));
-    $this->playbackSQLtoDatabase($root . "/mysql/upgrade/rebuild_nav_menus.sql");
+    $this->playbackSQLtoDatabase($root . $SQLFile);
   }
 
   function checkDatabaseVersion()
@@ -244,7 +245,7 @@ class SystemService
       $sSQL = "INSERT IGNORE INTO `version_ver` (`ver_version`, `ver_date`) VALUES ('" . $_SESSION['sSoftwareInstalledVersion'] . "',NOW())";
       RunQuery($sSQL); // False means do not stop on error
       //TODO upgrade script
-      $this->rebuildMenus();
+      $this->rebuildWithSQL("/mysql/upgrade/rebuild_nav_menus.sql");
       $this->playbackSQLtoDatabase($root . "/mysql/upgrade/1.2.14-2.0.0.sql");
       return "Upgraded";
     }
@@ -255,7 +256,7 @@ class SystemService
       $sSQL = "INSERT IGNORE INTO `version_ver` (`ver_version`, `ver_date`) VALUES ('" . $_SESSION['sSoftwareInstalledVersion'] . "',NOW())";
       RunQuery($sSQL); // False means do not stop on error
       //TODO upgrade script
-      $this->rebuildMenus();
+      $this->rebuildWithSQL("/mysql/upgrade/rebuild_nav_menus.sql");
       $this->playbackSQLtoDatabase($root . "/mysql/upgrade/1.3.0-2.0.0.sql");
       return "Upgraded";
     }
